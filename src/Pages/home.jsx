@@ -10,12 +10,17 @@ import {
   TabPanels,
 } from "@chakra-ui/react";
 import { MdChatBubbleOutline } from "react-icons/md";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {Login} from "../components/Authentication/login"
+import { ChatState } from "../Context/chatProvider";
 import { SignUp } from "../components/Authentication/signup";
 
 export const HomePage = () => {
 
 const navigate = useNavigate();
+const { setUser } = ChatState();
+
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
