@@ -14,6 +14,19 @@ import {Login} from "../components/Authentication/login"
 import { SignUp } from "../components/Authentication/signup";
 
 export const HomePage = () => {
+
+const navigate = useNavigate();
+
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    setUser(userInfo);
+
+    if (!userInfo) navigate("/");
+  }, [navigate]);
+
+
+
+
   return (
     <Container
       maxW="full"
