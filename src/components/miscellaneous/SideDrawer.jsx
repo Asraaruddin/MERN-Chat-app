@@ -1,44 +1,116 @@
-import { Box, Tooltip } from "@chakra-ui/react";
-import { useState } from "react"
+import {
+  Box,
+  Tooltip,
+  Button,
+  Text,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Avatar,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  Input,
+  Spinner,
+} from "@chakra-ui/react";
+import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../Context/chatProvider";
-import { Navigate } from "react-router-dom";
+import { ProfileModal } from "./ProfileModal"; // Assuming it’s a modal component
+import NotificationBadge, { Effect } from "react-notification-badge";
+import { ChatLoading } from "../chatLoading";
+import UserListItem from "../UserAvatar/userListItem";
 
- 
-export  const SideDrawer = () =>{
-    const [search,setSearch] = useState("");
-    const [searchResult,setSearchResult] = useState([]);
-    const [loading,setLoading] = useState(false);
-    const [loadingChat,setLoadingChat] = useState()
-    const [chats, setChats] = useState();
+// import { getSender } from "../../config/ChatLogics"; // Assuming utility function
 
-const {user} = ChatState;
-const logoutHandler = () => {
+export const SideDrawer = ({ onOpen, isOpen, onClose }) => {
+  const [search, setSearch] = useState("");
+  const [searchResult, setSearchResult] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
+
+  const navigate = useNavigate();
+  const {
+    user,
+    notification,
+    setNotification,
+    setSelectedChat,
+  } = ChatState();
+
+  const logoutHandler = () => {
     localStorage.removeItem("userInfo");
-    Navigate("/")
-}
+    navigate("/");
+  };
 
-    return <>
+  const handleSearch = async () => {
+    if (!search) return;
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/user?search=${search}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      const data = await response.json();
+      setSearchResult(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setLoading(false);
+    }
+  };
+
+  const accessChat = async (userId) => {
+    try {
+      setLoadingChat(true);
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      setSelectedChat(data);
+      setLoadingChat(false);
+      onClose();
+    } catch (error) {
+      console.error("Access chat error:", error);
+      setLoadingChat(false);
+    }
+  };
+
+  return (
+    <>
       <Box
-        d="flex"
+        display="flex"
         justifyContent="space-between"
         alignItems="center"
         bg="white"
         w="100%"
-        p="5px 10px 5px 10px"
+        p="5px 10px"
         borderWidth="5px"
       >
         <Tooltip label="Search Users to chat" hasArrow placement="bottom-end">
           <Button variant="ghost" onClick={onOpen}>
             <i className="fas fa-search"></i>
-            <Text d={{ base: "none", md: "flex" }} px={4}>
+            <Text display={{ base: "none", md: "flex" }} px={4}>
               Search User
             </Text>
           </Button>
         </Tooltip>
+
         <Text fontSize="2xl" fontFamily="Work sans">
           Talk-A-Tive
         </Text>
-        <div>
+
+        <Box display="flex" alignItems="center">
           <Menu>
             <MenuButton p={1}>
               <NotificationBadge
@@ -57,13 +129,14 @@ const logoutHandler = () => {
                     setNotification(notification.filter((n) => n !== notif));
                   }}
                 >
-                  {notif.chat.isGroupChat
+                  {/* {notif.chat.isGroupChat
                     ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${getSender(user, notif.chat.users)}`}
+                    : `New Message from ${getSender(user, notif.chat.users)}`} */}
                 </MenuItem>
               ))}
             </MenuList>
           </Menu>
+
           <Menu>
             <MenuButton as={Button} bg="white" rightIcon={<ChevronDownIcon />}>
               <Avatar
@@ -75,13 +148,13 @@ const logoutHandler = () => {
             </MenuButton>
             <MenuList>
               <ProfileModal user={user}>
-                <MenuItem>My Profile</MenuItem>{" "}
+                <MenuItem>My Profile</MenuItem>
               </ProfileModal>
               <MenuDivider />
               <MenuItem onClick={logoutHandler}>Logout</MenuItem>
             </MenuList>
           </Menu>
-        </div>
+        </Box>
       </Box>
 
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
@@ -89,7 +162,7 @@ const logoutHandler = () => {
         <DrawerContent>
           <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
           <DrawerBody>
-            <Box d="flex" pb={2}>
+            <Box display="flex" pb={2}>
               <Input
                 placeholder="Search by name or email"
                 mr={2}
@@ -101,20 +174,18 @@ const logoutHandler = () => {
             {loading ? (
               <ChatLoading />
             ) : (
-              searchResult?.map((user) => (
+              searchResult?.map((u) => (
                 <UserListItem
-                  key={user._id}
-                  user={user}
-                  handleFunction={() => accessChat(user._id)}
+                  key={u._id}
+                  user={u}
+                  handleFunction={() => accessChat(u._id)}
                 />
               ))
             )}
-            {loadingChat && <Spinner ml="auto" d="flex" />}
+            {loadingChat && <Spinner ml="auto" display="flex" />}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
- </>
-
-    
-
- }
+    </>
+  );
+};

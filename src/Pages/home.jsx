@@ -1,76 +1,48 @@
 import {
-  Container,
   Box,
-  Text,
-  Icon,
-  Tabs,
-  TabList,
+  Container,
   Tab,
+  TabList,
   TabPanel,
   TabPanels,
+  Tabs,
+  Text,
 } from "@chakra-ui/react";
-import { MdChatBubbleOutline } from "react-icons/md";
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {Login} from "../components/Authentication/login"
-import { ChatState } from "../Context/chatProvider";
-import { SignUp } from "../components/Authentication/signup";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Updated for React Router v6+
+import { Login } from "../components/Authentication/login";
+import Signup from "../components/Authentication/Signup";
 
-export const HomePage = () => {
 
-const navigate = useNavigate();
-const { setUser } = ChatState();
 
+
+export function  Homepage() {
+  const navigate = useNavigate(); // ✅ Replaces useHistory()
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    setUser(userInfo);
-
-    if (!userInfo) navigate("/");
+    const user = JSON.parse(localStorage.getItem("userInfo"));
+    if (user) navigate("/chats");
   }, [navigate]);
 
-
-
-
   return (
-    <Container
-      maxW="full"
-      minH="100vh"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="flex-start"
-      pt={12}
-      bg="transparent"
-    >
-      {/* Top Header */}
+    <Container maxW="xl" centerContent>
       <Box
-        d="flex"
+        display="flex" // ✅ Replaces `d`
+        justifyContent="center"
+        p={3}
         bg="white"
-        w={["90%", "40%"]}
+        w="100%"
         m="40px 0 15px 0"
-        p={1}
-       borderRadius="lg"
-        boxShadow="md"
-        textAlign="center"
-        mb={4}
+        borderRadius="lg"
+        borderWidth="1px"
       >
-        <Text fontSize="3xl" fontWeight="bold" fontFamily="Work Sans" color="blue.900">
-          Chat App
+        <Text fontSize="4xl" fontFamily="Work sans">
+          Talk-A-Tive
         </Text>
-        <Icon as={MdChatBubbleOutline} w={10} h={10} color="blue.900" mt={1} />
       </Box>
-
-      {/* Tabs Section */}
-      <Box
-        bg="white"
-        w={["90%", "500px"]}
-        p={6}
-        borderRadius="xl"
-        boxShadow="lg"
-      >
-        <Tabs isFitted variant="soft-rounded" colorScheme="blue">
-          <TabList mb="4">
+      <Box bg="white" w="100%" p={4} borderRadius="lg" borderWidth="1px">
+        <Tabs isFitted variant="soft-rounded">
+          <TabList mb="1em">
             <Tab>Login</Tab>
             <Tab>Sign Up</Tab>
           </TabList>
@@ -79,11 +51,13 @@ const { setUser } = ChatState();
               <Login />
             </TabPanel>
             <TabPanel>
-              <SignUp />
+              <Signup />
             </TabPanel>
           </TabPanels>
         </Tabs>
       </Box>
     </Container>
   );
-};
+}
+
+
