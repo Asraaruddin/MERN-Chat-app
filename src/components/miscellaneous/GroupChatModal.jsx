@@ -16,8 +16,8 @@ import {
 import axios from "axios";
 import { useState } from "react";
 import { ChatState } from "../../Context/chatProvider";
-import UserBadgeItem from "../userAvatar/UserBadgeItem";
-import UserListItem from "../UserAvatar/userListItem";
+// import UserBadgeItem from "../userAvatar/UserBadgeItem";
+import { UserListItem } from "../UserAvatar/userListItem";
 
   export const GroupChatModal = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -156,15 +156,15 @@ import UserListItem from "../UserAvatar/userListItem";
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </FormControl>
-            <Box w="100%" d="flex" flexWrap="wrap">
+            {/* <Box w="100%" d="flex" flexWrap="wrap">
               {selectedUsers.map((u) => (
-                <UserBadgeItem
-                  key={u._id}
-                  user={u}
-                  handleFunction={() => handleDelete(u)}
-                />
+                // <UserBadgeItem
+                //   key={u._id}
+                //   user={u}
+                //   handleFunction={() => handleDelete(u)}
+                // />
               ))}
-            </Box>
+            </Box> */}
             {loading ? (
               // <ChatLoading />
               <div>Loading...</div>

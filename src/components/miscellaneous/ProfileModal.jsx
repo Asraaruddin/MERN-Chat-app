@@ -1,3 +1,4 @@
+import React from "react";
 import { ViewIcon } from "@chakra-ui/icons";
 import {
   Modal,
@@ -14,52 +15,63 @@ import {
   Image,
 } from "@chakra-ui/react";
 
-export const ProfileModal = ({ user, children }) => {
+ export const ProfileModal = ({ user, children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <>
       {children ? (
-        <span onClick={onOpen}>{children}</span>
+        <span onClick={onOpen} style={{ cursor: "pointer" }}>{children}</span>
       ) : (
-        <IconButton display={{ base: "flex" }} icon={<ViewIcon />} onClick={onOpen} />
+        <IconButton
+          icon={<ViewIcon />}
+          onClick={onOpen}
+          aria-label="View Profile"
+          display={{ base: "flex" }}
+        />
       )}
-      <Modal size="lg" onClose={onClose} isOpen={isOpen} isCentered>
+
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
         <ModalOverlay />
-        <ModalContent height="410px">
+        <ModalContent maxH="90vh">
           <ModalHeader
-            fontSize="40px"
-            fontFamily="Work sans"
-            display="flex"
-            justifyContent="center"
+            fontSize="2xl"
+            fontWeight="bold"
+            textAlign="center"
+            fontFamily="Work Sans"
           >
-            {user.name}
+            {user?.name || "User Name"}
           </ModalHeader>
           <ModalCloseButton />
+
           <ModalBody
             display="flex"
             flexDirection="column"
             alignItems="center"
-            justifyContent="space-between"
+            gap={4}
+            py={4}
           >
             <Image
               borderRadius="full"
               boxSize="150px"
-              src={user.pic}
-              alt={user.name}
+              src={user?.pic || "https://via.placeholder.com/150"}
+              alt={user?.name || "User"}
+              objectFit="cover"
             />
-            <Text
-              fontSize={{ base: "28px", md: "30px" }}
-              fontFamily="Work sans"
-            >
-              Email: {user.email}
+            <Text fontSize={{ base: "lg", md: "xl" }} fontFamily="Work Sans">
+              Email: {user?.email || "Not available"}
             </Text>
           </ModalBody>
+
           <ModalFooter>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose} colorScheme="teal">
+              Close
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
     </>
   );
 };
+
+

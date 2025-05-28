@@ -17,53 +17,60 @@ import {
   Input,
   Spinner,
 } from "@chakra-ui/react";
-import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
-import { useState } from "react";
+import { BellIcon, ChevronDownIcon, ViewIcon, ArrowForwardIcon } from "@chakra-ui/icons";
+import { createContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../Context/chatProvider";
-import { ProfileModal } from "./ProfileModal"; // Assuming it’s a modal component
+import { ProfileModal } from "./ProfileModal";
 import NotificationBadge, { Effect } from "react-notification-badge";
 import { ChatLoading } from "../chatLoading";
-import UserListItem from "../UserAvatar/userListItem";
+import { UserListItem } from "../UserAvatar/userListItem";
+import axios from "axios";
+import { useToast } from "@chakra-ui/react";
 
-// import { getSender } from "../../config/ChatLogics"; // Assuming utility function
+const ChatContext = createContext()
 
-export const SideDrawer = ({ onOpen, isOpen, onClose }) => {
+export const SideDrawer = ({ isOpen, onOpen, onClose }) => {
+    
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
+  const toast = useToast();
 
   const navigate = useNavigate();
-  const {
-    user,
-    notification,
-    setNotification,
-    setSelectedChat,
-  } = ChatState();
+  const { user, notification, setNotification, setSelectedChat } = ChatState();
 
   const logoutHandler = () => {
     localStorage.removeItem("userInfo");
     navigate("/");
   };
+const handleSearch = async () => {
+  if (!search) return;
 
-  const handleSearch = async () => {
-    if (!search) return;
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/user?search=${search}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
-      const data = await response.json();
-      setSearchResult(data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Search failed:", error);
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const config = {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    };
+
+    const { data } = await axios.get(`/api/user?search=${search}`, config);
+    setLoading(false);
+    setSearchResult(data); // ← Must update this correctly
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: "Failed to Load Search Results",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    setLoading(false);
+  }
+};
+
 
   const accessChat = async (userId) => {
     try {
@@ -78,49 +85,51 @@ export const SideDrawer = ({ onOpen, isOpen, onClose }) => {
       });
       const data = await response.json();
       setSelectedChat(data);
-      setLoadingChat(false);
       onClose();
     } catch (error) {
       console.error("Access chat error:", error);
+    } finally {
       setLoadingChat(false);
     }
   };
 
   return (
     <>
+      {/* Top Navbar */}
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         bg="white"
         w="100%"
-        p="5px 10px"
-        borderWidth="5px"
+        px={4}
+        py={2}
+        boxShadow="sm"
+        borderBottom="1px solid #e2e8f0"
       >
-        <Tooltip label="Search Users to chat" hasArrow placement="bottom-end">
-          <Button variant="ghost" onClick={onOpen}>
-            <i className="fas fa-search"></i>
-            <Text display={{ base: "none", md: "flex" }} px={4}>
-              Search User
-            </Text>
+        <Tooltip label="Search users to chat" hasArrow placement="bottom-end">
+          <Button variant="ghost" colorScheme="teal" onClick={onOpen} leftIcon={<i className="fas fa-search"></i>}>
+            <Text display={{ base: "none", md: "inline" }}>Search User</Text>
           </Button>
         </Tooltip>
 
-        <Text fontSize="2xl" fontFamily="Work sans">
-          Talk-A-Tive
+        <Text fontSize="2xl" fontWeight="bold" fontFamily="Work Sans" color="teal.600">
+          Chat-A-Tive
         </Text>
 
-        <Box display="flex" alignItems="center">
+        <Box display="flex" alignItems="center" gap={4}>
+          {/* Notifications */}
           <Menu>
-            <MenuButton p={1}>
-              <NotificationBadge
-                count={notification.length}
-                effect={Effect.SCALE}
-              />
-              <BellIcon fontSize="2xl" m={1} />
+            <MenuButton p={1} position="relative">
+              <NotificationBadge count={notification.length} effect={Effect.SCALE} />
+              <BellIcon fontSize="2xl" />
             </MenuButton>
             <MenuList pl={2}>
-              {!notification.length && "No New Messages"}
+              {!notification.length && (
+                <Text fontSize="sm" color="gray.500" px={3}>
+                  No new messages
+                </Text>
+              )}
               {notification.map((notif) => (
                 <MenuItem
                   key={notif._id}
@@ -128,64 +137,66 @@ export const SideDrawer = ({ onOpen, isOpen, onClose }) => {
                     setSelectedChat(notif.chat);
                     setNotification(notification.filter((n) => n !== notif));
                   }}
+                  _hover={{ bg: "teal.50" }}
                 >
-                  {/* {notif.chat.isGroupChat
-                    ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${getSender(user, notif.chat.users)}`} */}
+                  New message notification
                 </MenuItem>
               ))}
             </MenuList>
           </Menu>
 
+          {/* Profile */}
           <Menu>
-            <MenuButton as={Button} bg="white" rightIcon={<ChevronDownIcon />}>
-              <Avatar
-                size="sm"
-                cursor="pointer"
-                name={user.name}
-                src={user.pic}
-              />
+            <MenuButton as={Button} variant="ghost" rightIcon={<ChevronDownIcon />}>
+              <Avatar size="sm" name={user.name} src={user.pic} />
             </MenuButton>
             <MenuList>
               <ProfileModal user={user}>
-                <MenuItem>My Profile</MenuItem>
+                <MenuItem icon={<ViewIcon />}>My Profile</MenuItem>
               </ProfileModal>
               <MenuDivider />
-              <MenuItem onClick={logoutHandler}>Logout</MenuItem>
+              <MenuItem icon={<ArrowForwardIcon />} onClick={logoutHandler}>
+                Logout
+              </MenuItem>
             </MenuList>
           </Menu>
         </Box>
       </Box>
 
+      {/* Drawer */}
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
-          <DrawerBody>
-            <Box display="flex" pb={2}>
-              <Input
-                placeholder="Search by name or email"
-                mr={2}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Button onClick={handleSearch}>Go</Button>
-            </Box>
-            {loading ? (
-              <ChatLoading />
-            ) : (
-              searchResult?.map((u) => (
-                <UserListItem
-                  key={u._id}
-                  user={u}
-                  handleFunction={() => accessChat(u._id)}
-                />
-              ))
-            )}
-            {loadingChat && <Spinner ml="auto" display="flex" />}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+  <DrawerOverlay />
+  <DrawerContent>
+    <DrawerHeader borderBottomWidth="1px" fontSize="lg" fontWeight="bold" color="teal.600">
+      Search Users
+    </DrawerHeader>
+    <DrawerBody bg="gray.50">
+      <Box display="flex" pb={4}>
+        <Input
+          placeholder="Search by name or email"
+          mr={2}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          focusBorderColor="teal.400"
+        />
+        <Button colorScheme="teal" onClick={handleSearch}>
+          Go
+        </Button>
+      </Box>
+
+      {loading ? (
+        <ChatLoading />
+      ) : (
+        searchResult.map((u) => (
+          <UserListItem key={u._id} user={u} handleFunction={() => accessChat(u._id)} />
+        ))
+      )}
+
+      {loadingChat && <Spinner ml="auto" display="flex" color="teal.500" />}
+    </DrawerBody>
+  </DrawerContent>
+</Drawer>
+
     </>
   );
 };

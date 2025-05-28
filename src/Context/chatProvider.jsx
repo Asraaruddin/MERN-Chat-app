@@ -1,22 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ChatContext = createContext();
+const ChatContext = createContext(null);
 
-const ChatProvider = ({ children }) => {
+export const ChatProvider = ({ children }) => {
   const [selectedChat, setSelectedChat] = useState();
-  const [user, setUser] = useState();
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")));
   const [notification, setNotification] = useState([]);
   const [chats, setChats] = useState();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    setUser(userInfo);
-
-    if (!userInfo) navigate("/");
-  }, [navigate]);
+    if (!user) navigate("/");
+  }, [user, navigate]);
 
   return (
     <ChatContext.Provider
@@ -36,6 +33,10 @@ const ChatProvider = ({ children }) => {
   );
 };
 
-export const ChatState = () => useContext(ChatContext);
-
-export default ChatProvider;
+export const ChatState = () => {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error("ChatState must be used within a ChatProvider");
+  }
+  return context;
+};

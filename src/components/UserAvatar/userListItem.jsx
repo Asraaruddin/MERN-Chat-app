@@ -1,10 +1,9 @@
 import { Avatar, Box, Text } from "@chakra-ui/react";
-import { ChatState } from "../../Context/chatProvider";
 
-const UserListItem = ({ handleFunction }) => {
-  const { user } = ChatState();
 
-  if (!user) return null;
+
+ export const UserListItem = ({user,handleFunction }) => {
+
 
   return (
     <Box
@@ -16,7 +15,7 @@ const UserListItem = ({ handleFunction }) => {
         color: "white",
       }}
       w="100%"
-      display="flex"
+      d="flex"
       alignItems="center"
       color="black"
       px={3}
@@ -41,5 +40,3 @@ const UserListItem = ({ handleFunction }) => {
     </Box>
   );
 };
-
-export default UserListItem;
