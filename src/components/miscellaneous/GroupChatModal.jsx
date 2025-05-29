@@ -128,65 +128,89 @@ import { UserListItem } from "../UserAvatar/userListItem";
   return (
     <>
       <span onClick={onOpen}>{children}</span>
+<Modal onClose={onClose} isOpen={isOpen} isCentered size="lg">
+  <ModalOverlay />
+  <ModalContent borderRadius="lg" boxShadow="lg" p={4}>
+    <ModalHeader
+      fontSize="28px"
+      fontWeight="bold"
+      fontFamily="Work sans"
+      textAlign="center"
+      color="gray.700"
+    >
+      Create Group Chat
+    </ModalHeader>
+    <ModalCloseButton />
+    <ModalBody display="flex" flexDir="column" gap={4} px={6} py={2}>
+      <FormControl>
+        <Input
+          placeholder="Group Name"
+          onChange={(e) => setGroupChatName(e.target.value)}
+          borderRadius="md"
+          borderColor="gray.300"
+          focusBorderColor="blue.400"
+        />
+      </FormControl>
 
-      <Modal onClose={onClose} isOpen={isOpen} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader
-            fontSize="35px"
-            fontFamily="Work sans"
-            d="flex"
-            justifyContent="center"
+      <FormControl>
+        <Input
+          placeholder="Add users (e.g. John, Jane)"
+          onChange={(e) => handleSearch(e.target.value)}
+          borderRadius="md"
+          borderColor="gray.300"
+          focusBorderColor="blue.400"
+        />
+      </FormControl>
+
+      <Box w="100%" display="flex" flexWrap="wrap" gap={2}>
+        {selectedUsers.map((u) => (
+          // Uncomment and style the UserBadgeItem here if you use it
+          // <UserBadgeItem key={u._id} user={u} handleFunction={() => handleDelete(u)} />
+          <Box
+            key={u._id}
+            px={3}
+            py={1}
+            bg="blue.100"
+            borderRadius="full"
+            fontSize="sm"
+            color="blue.800"
+            cursor="pointer"
+            onClick={() => handleDelete(u)}
           >
-            Create Group Chat
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody d="flex" flexDir="column" alignItems="center">
-            <FormControl>
-              <Input
-                placeholder="Chat Name"
-                mb={3}
-                onChange={(e) => setGroupChatName(e.target.value)}
-              />
-            </FormControl>
-            <FormControl>
-              <Input
-                placeholder="Add Users eg: John, Piyush, Jane"
-                mb={1}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </FormControl>
-            {/* <Box w="100%" d="flex" flexWrap="wrap">
-              {selectedUsers.map((u) => (
-                // <UserBadgeItem
-                //   key={u._id}
-                //   user={u}
-                //   handleFunction={() => handleDelete(u)}
-                // />
-              ))}
-            </Box> */}
-            {loading ? (
-              // <ChatLoading />
-              <div>Loading...</div>
-            ) : (
-              searchResult
-                ?.slice(0, 4)
-                .map((user) => (
-                  <UserListItem
-                    key={user._id}
-                    user={user}
-                    handleFunction={() => handleGroup(user)}
-                  />
-                ))
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={handleSubmit} colorScheme="blue">
-              Create Chat
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            {u.name} &times;
+          </Box>
+        ))}
+      </Box>
+
+      {loading ? (
+        <Box textAlign="center" mt={2}>Loading...</Box>
+      ) : (
+        searchResult
+          ?.slice(0, 4)
+          .map((user) => (
+            <UserListItem
+              key={user._id}
+              user={user}
+              handleFunction={() => handleGroup(user)}
+            />
+          ))
+      )}
+    </ModalBody>
+
+    <ModalFooter justifyContent="center">
+      <Button
+        onClick={handleSubmit}
+        colorScheme="blue"
+        w="100%"
+        borderRadius="md"
+        fontWeight="semibold"
+      >
+        Create Chat
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
+
     </>
   );
 };
