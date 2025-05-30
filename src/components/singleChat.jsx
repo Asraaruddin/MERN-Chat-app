@@ -1,19 +1,19 @@
 import { FormControl } from "@chakra-ui/react";
 import { Input } from "@chakra-ui/react";
 import { Box, Text } from "@chakra-ui/react";
-// import "./styles.css";
+import "./styles.css";
 import { IconButton, Spinner, useToast } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/chatLogic"
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { ProfileModal } from "./miscellaneous/ProfileModal";
-// import ScrollableChat from "./ScrollableChat";
+import { ScrollableChat } from "./ScrollableChat";
 // import Lottie from "react-lottie";
 // import animationData from "../animations/typing.json";
 
 import io from "socket.io-client";
-// import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
+import { UpdateGroupChatModal } from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/chatProvider";
 const ENDPOINT = "http://localhost:5000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
 var socket, selectedChatCompare;
@@ -26,6 +26,7 @@ var socket, selectedChatCompare;
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const toast = useToast();
+  const lastTypingTime = useRef(null);
 
   // const defaultOptions = {
   //   loop: true,
@@ -37,72 +38,75 @@ var socket, selectedChatCompare;
   // };
   const { selectedChat, setSelectedChat, user, notification, setNotification } =
     ChatState();
+const fetchMessages = async () => {
+  if (!selectedChat || !selectedChat._id) return;
 
-  const fetchMessages = async () => {
-    if (!selectedChat) return;
+  setLoading(true);
+  try {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
+    };
 
+    const { data } = await axios.get(
+      `/api/message/${selectedChat._id}`,
+      config
+    );
+    setMessages(Array.isArray(data) ? data : []);
+    socket.emit("join chat", selectedChat._id);
+  } catch (error) {
+    toast({
+      title: "Error Occurred!",
+      description: "Failed to load the messages",
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+      position: "bottom",
+    });
+  } finally {
+    setLoading(false); // ✅ ensures loading stops even on error
+  }
+};
+
+const sendMessage = async (event) => {
+  if (event.key === "Enter" && newMessage.trim()) {
+    socket.emit("stop typing", selectedChat._id);
     try {
       const config = {
         headers: {
+          "Content-type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
       };
 
-      setLoading(true);
+      const messageContent = newMessage;
+      setNewMessage("");
 
-      const { data } = await axios.get(
-        `/api/message/${selectedChat._id}`,
+      const { data } = await axios.post(
+        "/api/message",
+        {
+          content: messageContent,
+          chatId: selectedChat._id,
+        },
         config
       );
-      setMessages(data);
-      setLoading(false);
 
-      socket.emit("join chat", selectedChat._id);
+      socket.emit("new message", data);
+      setMessages([...messages, data]);
     } catch (error) {
       toast({
-        title: "Error Occured!",
-        description: "Failed to Load the Messages",
+        title: "Error Occurred!",
+        description: "Failed to send the Message",
         status: "error",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
     }
-  };
+  }
+};
 
-  const sendMessage = async (event) => {
-    if (event.key === "Enter" && newMessage) {
-      socket.emit("stop typing", selectedChat._id);
-      try {
-        const config = {
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
-        setNewMessage("");
-        const { data } = await axios.post(
-          "/api/message",
-          {
-            content: newMessage,
-            chatId: selectedChat,
-          },
-          config
-        );
-        socket.emit("new message", data);
-        setMessages([...messages, data]);
-      } catch (error) {
-        toast({
-          title: "Error Occured!",
-          description: "Failed to send the Message",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom",
-        });
-      }
-    }
-  };
 
   useEffect(() => {
     socket = io(ENDPOINT);
@@ -137,26 +141,31 @@ var socket, selectedChatCompare;
     });
   });
 
-  const typingHandler = (e) => {
-    setNewMessage(e.target.value);
+  
 
-    if (!socketConnected) return;
+const typingHandler = (e) => {
+  setNewMessage(e.target.value);
 
-    if (!typing) {
-      setTyping(true);
-      socket.emit("typing", selectedChat._id);
+  if (!socketConnected) return;
+
+  if (!typing) {
+    setTyping(true);
+    socket.emit("typing", selectedChat._id);
+  }
+
+  lastTypingTime.current = new Date().getTime();
+  const timerLength = 3000;
+
+  setTimeout(() => {
+    const timeNow = new Date().getTime();
+    const timeDiff = timeNow - lastTypingTime.current;
+    if (timeDiff >= timerLength && typing) {
+      socket.emit("stop typing", selectedChat._id);
+      setTyping(false);
     }
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
-    setTimeout(() => {
-      var timeNow = new Date().getTime();
-      var timeDiff = timeNow - lastTypingTime;
-      if (timeDiff >= timerLength && typing) {
-        socket.emit("stop typing", selectedChat._id);
-        setTyping(false);
-      }
-    }, timerLength);
-  };
+  }, timerLength);
+};
+
 
   return (
     <>
@@ -188,11 +197,11 @@ var socket, selectedChatCompare;
               ) : (
                 <>
                   {selectedChat.chatName.toUpperCase()}
-                  {/* <UpdateGroupChatModal
+                  <UpdateGroupChatModal
                     fetchMessages={fetchMessages}
                     fetchAgain={fetchAgain}
                     setFetchAgain={setFetchAgain}
-                  /> */}
+                  />
                 </>
               ))}
           </Text>
@@ -217,7 +226,7 @@ var socket, selectedChatCompare;
               />
             ) : (
               <div className="messages">
-                {/* <ScrollableChat messages={messages} /> */}
+                <ScrollableChat messages={messages} />
               </div>
             )}
 

@@ -16,7 +16,7 @@ import {
 import axios from "axios";
 import { useState } from "react";
 import { ChatState } from "../../Context/chatProvider";
-// import UserBadgeItem from "../userAvatar/UserBadgeItem";
+import { UserBadgeItem } from "../UserAvatar/UserBadgeItem";
 import { UserListItem } from "../UserAvatar/userListItem";
 
   export const GroupChatModal = ({ children }) => {
@@ -164,22 +164,22 @@ import { UserListItem } from "../UserAvatar/userListItem";
 
       <Box w="100%" display="flex" flexWrap="wrap" gap={2}>
         {selectedUsers.map((u) => (
-          // Uncomment and style the UserBadgeItem here if you use it
-          // <UserBadgeItem key={u._id} user={u} handleFunction={() => handleDelete(u)} />
-          <Box
-            key={u._id}
-            px={3}
-            py={1}
-            bg="blue.100"
-            borderRadius="full"
-            fontSize="sm"
-            color="blue.800"
-            cursor="pointer"
-            onClick={() => handleDelete(u)}
-          >
-            {u.name} &times;
-          </Box>
-        ))}
+  <Box key={u._id}>
+    <UserBadgeItem user={u} handleFunction={() => handleDelete(u)} />
+    <Box
+      px={3}
+      py={1}
+      bg="blue.100"
+      borderRadius="full"
+      fontSize="sm"
+      color="blue.800"
+      cursor="pointer"
+      onClick={() => handleDelete(u)}
+    >
+      {u.name} &times;
+    </Box>
+  </Box>
+))}
       </Box>
 
       {loading ? (
