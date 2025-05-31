@@ -17,18 +17,18 @@ import {
   Input,
   Spinner,
 } from "@chakra-ui/react";
-import { BellIcon, ChevronDownIcon, ViewIcon, ArrowForwardIcon } from "@chakra-ui/icons";
-import { createContext, useState } from "react";
+import {  ChevronDownIcon, ViewIcon, ArrowForwardIcon } from "@chakra-ui/icons";
+import {  useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatState } from "../../Context/chatProvider";
 import { ProfileModal } from "./ProfileModal";
-import NotificationBadge, { Effect } from "react-notification-badge";
 import { ChatLoading } from "../chatLoading";
 import { UserListItem } from "../UserAvatar/userListItem";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
+import { NotificationBadge } from "./NotificationBadge";
 
-const ChatContext = createContext()
+// const ChatContext = createContext()
 
 export const SideDrawer = ({ isOpen, onOpen, onClose }) => {
     
@@ -39,7 +39,7 @@ export const SideDrawer = ({ isOpen, onOpen, onClose }) => {
   const toast = useToast();
 
   const navigate = useNavigate();
-  const { user, notification, setNotification, setSelectedChat } = ChatState();
+  const { user, setSelectedChat } = ChatState();
 
   const logoutHandler = () => {
     localStorage.removeItem("userInfo");
@@ -119,31 +119,9 @@ const handleSearch = async () => {
 
         <Box display="flex" alignItems="center" gap={4}>
           {/* Notifications */}
-          <Menu>
-            <MenuButton p={1} position="relative">
-              <NotificationBadge count={notification.length} effect={Effect.SCALE} />
-              <BellIcon fontSize="2xl" />
-            </MenuButton>
-            <MenuList pl={2}>
-              {!notification.length && (
-                <Text fontSize="sm" color="gray.500" px={3}>
-                  No new messages
-                </Text>
-              )}
-              {notification.map((notif) => (
-                <MenuItem
-                  key={notif._id}
-                  onClick={() => {
-                    setSelectedChat(notif.chat);
-                    setNotification(notification.filter((n) => n !== notif));
-                  }}
-                  _hover={{ bg: "teal.50" }}
-                >
-                  New message notification
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
+          <NotificationBadge onNotificationClick={onClose} />
+
+
 
           {/* Profile */}
           <Menu>

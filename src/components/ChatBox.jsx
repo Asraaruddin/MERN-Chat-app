@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-// import "./styles.css"; // Uncomment only if you actually have this file
+import "./styles.css"; 
 import { SingleChat } from "./singleChat";
 import { ChatState } from "../Context/chatProvider";
 
@@ -12,7 +12,7 @@ export const ChatBox = ({ fetchAgain, setFetchAgain }) => {
       alignItems="center"
       flexDir="column"
       p={3}
-      bg="white"
+      bg="whiteAlpha.600" // <-- Transparent white background
       w={{ base: "100%", md: "68%" }}
       borderRadius="lg"
       borderWidth="1px"
