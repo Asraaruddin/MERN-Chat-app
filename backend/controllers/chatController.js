@@ -51,34 +51,6 @@ const accessChat = asyncHandler(async (req, res) => {
   }
 });
 
-
-// @desc    Create or fetch one-to-one chat
-// @route   POST /api/chat/
-// @access  Protected
-const allUsers = asyncHandler(async (req, res) => {
-  console.log("Search query:", req.query.search);
-  console.log("Requesting user:", req.user);
-
-  if (!req.user) {
-    console.log("No authenticated user found");
-  }
-
-  const keyword = req.query.search
-    ? {
-        $or: [
-          { name: { $regex: req.query.search, $options: "i" } },
-          { email: { $regex: req.query.search, $options: "i" } },
-        ],
-      }
-    : {};
-
-  const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
-  console.log("Found users:", users.length);
-
-  res.send(users);
-});
-
-
 // @desc    Fetch all chats for a user
 // @route   GET /api/chat/
 // @access  Protected
@@ -115,8 +87,7 @@ const createGroupChat = asyncHandler(async (req, res) => {
   let users = JSON.parse(req.body.users);
 
   if (users.length < 2) {
-    return res.status(400)
-    .send("More than 2 users are required to form a group chat");
+    return res.status(400).send("More than 2 users are required to form a group chat");
   }
 
   users.push(req.user);
@@ -207,7 +178,6 @@ const addToGroup = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-    allUsers,
   accessChat,
   fetchChats,
   createGroupChat,
