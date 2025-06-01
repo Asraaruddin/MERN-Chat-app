@@ -1,13 +1,17 @@
 {
-  "name": "etalkie",
+  "name": "e-talkie",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js ",
-  "scripts": {
-    "start": "nodemon backend/server.js"
-  },
-  "author": "asrar uddin",
+  "main": "server.js",
+  "author": "Asrar Uddin",
   "license": "ISC",
+  "scripts": {
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm install --legacy-peer-deps && npm install --prefix frontend --legacy-peer-deps && npm run build --prefix frontend"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "colors": "^1.4.0",
@@ -19,5 +23,8 @@
     "mongoose": "^8.15.0",
     "nodemon": "^3.1.10",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

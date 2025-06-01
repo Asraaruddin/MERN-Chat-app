@@ -5,9 +5,10 @@ const cors = require("cors");        // require cors at top
 const { chats } = require("./data/data");
 const connectDB = require("./config/db");
 const userRoutes = require('./routes/userRoutes');
-const chatRoutes = require("./routes/chatRoutes")
-const messageRoutes = require("./routes/messageroutes")
-const {notFound,errorHandler} = require('./middleware/errorMiddleware')
+const chatRoutes = require("./routes/chatRoutes");
+const messageRoutes = require("./routes/messageroutes");
+const {notFound,errorHandler} = require('./middleware/errorMiddleware');
+const path = require("path")
 
 
 connectDB();
@@ -22,8 +23,27 @@ app.get("/", (req, res) => {
 });
 
 app.use('/api/user',userRoutes);
-app.use('/api/chat',chatRoutes)
-app.use('/api/message',messageRoutes)
+app.use('/api/chat',chatRoutes);
+app.use('/api/message',messageRoutes);
+
+// -------------Deployement------------------
+
+const __dirname1 =  path.resolve();
+if(process.env.NODE_ENV==='production'){
+  app.use(express.static(path.join(__dirname1,"/frontend/build")))
+  
+  app.get('*',(req,res)=>{
+    res.sendFile(path.resolve(__dirname1,"frontend","build","index.html"))
+
+  })
+
+} else {
+  app.get("/",(req,res)=>{
+    res.send("API is Running Successfully")
+  })
+}
+
+// -------------Deployement------------------
 app.use(notFound);
 app.use(errorHandler);
 
@@ -52,9 +72,9 @@ io.on("connection",(socket)=>{
 
     if(!chat.users) return console.log("chat.users not defined");
     chat.users.forEach(user=>{
-      if(user._id===newMessageRecieved.send._id) return;
+      if(user._id===newMessageRecieved.sender._id) return;
 
-      socket.in(user._id).emit("message recieved",newMessageRecieved);
+      socket.in(user._id).emit("message received",newMessageRecieved);
     })
   });
   socket.off("setup",()=>{
