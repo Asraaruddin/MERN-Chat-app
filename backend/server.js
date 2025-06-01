@@ -26,6 +26,8 @@ app.use('/api/user',userRoutes);
 app.use('/api/chat',chatRoutes);
 app.use('/api/message',messageRoutes);
 
+
+
 // -------------Deployement------------------
 
 const __dirname1 =  path.resolve();
@@ -46,6 +48,7 @@ if(process.env.NODE_ENV==='production'){
 // -------------Deployement------------------
 app.use(notFound);
 app.use(errorHandler);
+
 
 const PORT = process.env.PORT || 5000;
 
