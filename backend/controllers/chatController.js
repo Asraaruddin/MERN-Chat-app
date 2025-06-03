@@ -53,21 +53,25 @@ const accessChat = asyncHandler(async (req, res) => {
 
 // @desc    Fetch all chats for a user
 // @route   GET /api/chat/
-// @access  Protected
+// @access  Protected 
+
 const fetchChats = asyncHandler(async (req, res) => {
+  console.log("User ID:", req.user._id);
   try {
-    let results = await Chat.find({
+    const results = await Chat.find({
       users: { $elemMatch: { $eq: req.user._id } },
     })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
-      .populate("latestMessage")
+      .populate({
+        path: "latestMessage",
+        populate: {
+          path: "sender",
+          select: "name pic email",
+        },
+      })
       .sort({ updatedAt: -1 });
-
-    results = await User.populate(results, {
-      path: "latestMessage.sender",
-      select: "name pic email",
-    });
+      console.log("Fetched chats:", JSON.stringify(results, null, 2))
 
     res.status(200).send(results);
   } catch (error) {
@@ -75,6 +79,8 @@ const fetchChats = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+
+
 
 // @desc    Create new group chat
 // @route   POST /api/chat/group

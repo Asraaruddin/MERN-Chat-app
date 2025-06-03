@@ -7,7 +7,6 @@ const sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
 
   if (!content || !chatId) {
-    console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
 
@@ -20,24 +19,27 @@ const sendMessage = asyncHandler(async (req, res) => {
   try {
     let message = await Message.create(newMessage);
 
-    message = await Message.findById(message._id)
-      .populate("sender", "name pic")
-      .populate("chat")
-      .populate({
-        path: "chat.users",
-        select: "name pic email",
-      });
-
-    await Chat.findByIdAndUpdate(req.body.chatId, {
-      latestMessage: message,
+    message = await message.populate("sender", "name pic");
+    message = await message.populate("chat");
+    message = await User.populate(message, {
+      path: "chat.users",
+      select: "name pic email",
     });
 
+    // ✅ STORE the result in a variable
+    const updatedChat = await Chat.findByIdAndUpdate(
+      chatId,
+      { latestMessage: message._id },
+      { new: true } // returns updated document
+    );
     res.json(message);
   } catch (error) {
+    console.error("SendMessage Error:", error); // Add this for debugging
     res.status(400);
     throw new Error(error.message);
   }
 });
+
 
 const allMessage = asyncHandler(async (req,res)=>{
 
@@ -46,6 +48,8 @@ const allMessage = asyncHandler(async (req,res)=>{
     "sender",
     "name pic email"
  ).populate("chat");
+  console.log("Updated chat latestMessage:", updatedChat.latestMessage);
+
  res.json(message);}
     catch (error) { 
         res.status(400);
