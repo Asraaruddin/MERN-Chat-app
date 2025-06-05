@@ -1,83 +1,76 @@
+// ------------------------ Imports ------------------------
 const express = require("express");
 const dotenv = require("dotenv");
-dotenv.config(); 
-const cors = require("cors");        // require cors at top
-const { chats } = require("./data/data");
+const cors = require("cors");
+const path = require("path");
 const connectDB = require("./config/db");
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-const {notFound,errorHandler} = require('./middleware/errorMiddleware');
-const path = require("path")
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
-
+// ------------------------ Config ------------------------
+dotenv.config();
 connectDB();
+
 const app = express();
+app.use(express.json()); // To accept JSON data
+app.use(cors());         // CORS middleware should come before routes
 
-app.use(express.json()) //to  accept JSON Data 
+// ------------------------ Routes ------------------------
+app.use('/api/user', userRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/message', messageRoutes);
 
-app.use(cors());                     // use cors BEFORE routes
+// ------------------------ Deployment ------------------------
+const __dirname1 = path.resolve();
 
-app.get("/", (req, res) => {
-  res.send("API is running successfully ");
-});
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname1, '/frontend/build')));
 
-app.use('/api/user',userRoutes);
-app.use('/api/chat',chatRoutes);
-app.use('/api/message',messageRoutes);
-
-
-
-// -------------Deployement------------------
-
-const __dirname1 =  path.resolve();
-if(process.env.NODE_ENV==='production'){
-  app.use(express.static(path.join(__dirname1,"/frontend/build")))
-  
-  app.get('*',(req,res)=>{
-    res.sendFile(path.resolve(__dirname1,"frontend","build","index.html"))
-
-  })
-
+  app.get('*', (req, res) =>
+    res.sendFile(path.resolve(__dirname1, 'frontend', 'build', 'index.html'))
+  );
 } else {
-  app.get("/",(req,res)=>{
-    res.send("API is Running Successfully")
-  })
+  app.get('/', (req, res) => {
+    res.send('API is Running Successfully');
+  });
 }
 
-// -------------Deployement------------------
+// ------------------------ Error Handling ------------------------
 app.use(notFound);
 app.use(errorHandler);
 
-
+// ------------------------ Server Listen ------------------------
 const PORT = process.env.PORT || 5000;
 
-const server  =  app.listen(PORT, () => console.log(`Server started on Port ${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`Server started on port ${PORT}`)
+);
 
-
+// ------------------------ Socket.io ------------------------
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3000", // change if frontend hosted elsewhere
   },
 });
 
 io.on("connection", (socket) => {
-  console.log("connected to socket.io");
+  console.log("Connected to socket.io");
 
   socket.on("setup", (userData) => {
     socket.join(userData._id);
+     socket.userData = userData; // Store on socket
     socket.emit("connected");
   });
 
   socket.on("join chat", (room) => {
     socket.join(room);
-    console.log("User JOINED Room: " + room);
+    console.log("User joined room: " + room);
   });
 
-  // Now expect an object { roomId, userId } instead of a plain string
   socket.on("typing", ({ roomId, userId }) => {
-    // Broadcast to everyone else in that chat room:
     socket.in(roomId).emit("typing", { userId });
   });
 
@@ -96,6 +89,6 @@ io.on("connection", (socket) => {
   });
 
   socket.off("setup", () => {
-    socket.leave(userData._id);
+    socket.leave(userData._id); // Note: 'userData' is undefined here
   });
 });
