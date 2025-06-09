@@ -1,6 +1,10 @@
 # 💬 Chatify - Real-Time Chat Application
 
-![Chatify Screenshot](https://your-screenshot-url-if-any.com)
+## 📸 Screenshots
+
+### 📝 Signup Page
+![Signup Page](https://github.com/Asraaruddin/MERN-Chat-app/blob/045e7d478f7a2e157e35ae9d0074c2b7a3d61289/screenshots/Signup%20page.png?raw=true)
+
 
 **Chatify** is a real-time chat application built with the **MERN stack** (MongoDB, Express.js, React, Node.js) and **Socket.IO**. It supports **1-on-1 messaging**, **group chats**, **real-time typing indicators**, **JWT authentication**, and a sleek **Chakra UI** design.
 
