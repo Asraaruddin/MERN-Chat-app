@@ -52,4 +52,34 @@
 ---
 
 ## 📁 Project Structure
+MERN-Chat-app/
+│
+├── backend/ # Express backend + real-time server
+│ ├── config/ # DB & Cloudinary setup
+│ ├── controllers/ # Route handlers (auth, chat, users, messages)
+│ ├── middleware/ # Auth middleware
+│ ├── models/ # Mongoose models (User, Chat, Message)
+│ ├── routes/ # Express route files
+│ ├── server.js # App entry point
+│ └── .env # Environment config (not in repo)
+│
+├── frontend/ # React front end with Chakra UI
+│ ├── public/ # Static files
+│ ├── src/ # Source code
+│ │ ├── components/ # Reusable UI components
+│ │ ├── context/ # Global state with React Context
+│ │ ├── pages/ # Page components (Login, Signup, Chat)
+│ │ ├── App.js # Root component & routing
+│ │ └── index.js # Entry and render logic
+│ ├── package.json
+│ └── package-lock.json
+│
+├── screenshots/ # App UI snapshots
+│ ├── signup page.png
+│ ├── login page.png
+│ └── chatui.png
+│
+├── .gitignore
+├── README.md
+└── package.json # Root scripts (build, dev, deploy)
 
