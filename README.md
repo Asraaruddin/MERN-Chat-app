@@ -81,5 +81,6 @@ MERN-Chat-app/
 │
 ├── .gitignore
 ├── README.md
-└── package.json # Root scripts (build, dev, deploy)
+└── package.json # Root scripts (build, dev, deploy
+)
 
