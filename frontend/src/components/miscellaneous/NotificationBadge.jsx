@@ -23,7 +23,6 @@ export const NotificationBadge = ({ onNotificationClick }) => {
 
   const notificationRef = useRef(notification);
 
-  // keep latest notifications in ref to avoid stale closure
   useEffect(() => {
     notificationRef.current = notification;
   }, [notification]);
@@ -32,23 +31,18 @@ export const NotificationBadge = ({ onNotificationClick }) => {
     if (!socket) return;
 
     const handleMessageReceived = (newMessage) => {
-      // Only notify if it's not the currently selected chat
       if (!selectedChat || selectedChat._id !== newMessage.chat._id) {
-        const alreadyExists = notificationRef.current.some(
+        const exists = notificationRef.current.some(
           (n) => n._id === newMessage._id
         );
-        if (!alreadyExists) {
+        if (!exists) {
           setNotification((prev) => [newMessage, ...prev]);
 
-          // ✅ Optional: Sound notification (must be in /public folder)
           const audio = new Audio("/notification.mp3");
-          audio.play().catch((e) =>
-            console.warn("Notification sound failed:", e)
-          );
+          audio.play().catch(() => {});
         }
       }
     };
-    
 
     socket.on("message received", handleMessageReceived);
 
@@ -64,8 +58,6 @@ export const NotificationBadge = ({ onNotificationClick }) => {
     setNotification(notification.filter((n) => n !== notif));
     onNotificationClick?.();
   };
-
-
 
   return (
     <Menu>

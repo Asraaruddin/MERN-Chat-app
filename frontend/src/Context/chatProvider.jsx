@@ -1,33 +1,53 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 
 const ChatContext = createContext(null);
-const ENDPOINT = "http://localhost:5000"; // Replace with your backend URL
-let socket;
+
+// Use environment variable or fallback to localhost
+const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 export const ChatProvider = ({ children }) => {
   const [selectedChat, setSelectedChat] = useState();
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("userInfo")));
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("userInfo"))
+  );
   const [notification, setNotification] = useState([]);
   const [chats, setChats] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
 
+  const socketRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) {
       navigate("/");
-    } else {
-      socket = io(ENDPOINT);
-      socket.emit("setup", user);
-      socket.on("connected", () => setSocketConnected(true));
+      return;
+    }
+
+    if (!socketRef.current) {
+      socketRef.current = io(ENDPOINT, {
+        transports: ["websocket", "polling"],
+        withCredentials: true,
+      });
+
+      socketRef.current.emit("setup", user);
+
+      socketRef.current.on("connected", () => setSocketConnected(true));
+
+      socketRef.current.on("disconnect", () => {
+        setSocketConnected(false);
+        socketRef.current.connect(); // Auto-reconnect
+      });
     }
 
     return () => {
-      if (socket) socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
-  }, [user]);
+  }, [user, navigate]);
 
   return (
     <ChatContext.Provider
@@ -40,7 +60,7 @@ export const ChatProvider = ({ children }) => {
         setNotification,
         chats,
         setChats,
-        socket,
+        socket: socketRef.current,
         socketConnected,
       }}
     >
