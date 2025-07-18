@@ -4,10 +4,10 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
 const connectDB = require("./config/db");
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 // ------------------------ Config ------------------------
 dotenv.config();
@@ -15,25 +15,32 @@ connectDB();
 
 const app = express();
 app.use(express.json()); // To accept JSON data
-app.use(cors());         // CORS middleware should come before routes
+
+// --- CORS Middleware ---
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://talkify-5m26.onrender.com"],
+    credentials: true,
+  })
+);
 
 // ------------------------ Routes ------------------------
-app.use('/api/user', userRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/message', messageRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/message", messageRoutes);
 
 // ------------------------ Deployment ------------------------
 const __dirname1 = path.resolve();
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname1, '/frontend/build')));
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname1, "/frontend/build")));
 
-  app.get('*', (req, res) =>
-    res.sendFile(path.resolve(__dirname1, 'frontend', 'build', 'index.html'))
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
   );
 } else {
-  app.get('/', (req, res) => {
-    res.send('API is Running Successfully');
+  app.get("/", (req, res) => {
+    res.send("API is Running Successfully");
   });
 }
 
@@ -52,7 +59,8 @@ const server = app.listen(PORT, () =>
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:3000", // change if frontend hosted elsewhere
+    origin: ["http://localhost:3000", "https://talkify-5m26.onrender.com"],
+    credentials: true,
   },
 });
 
@@ -61,7 +69,7 @@ io.on("connection", (socket) => {
 
   socket.on("setup", (userData) => {
     socket.join(userData._id);
-     socket.userData = userData; // Store on socket
+    socket.userData = userData; // store user data on socket
     socket.emit("connected");
   });
 
@@ -89,6 +97,8 @@ io.on("connection", (socket) => {
   });
 
   socket.off("setup", () => {
-    socket.leave(userData._id); // Note: 'userData' is undefined here
+    if (socket.userData?._id) {
+      socket.leave(socket.userData._id);
+    }
   });
 });
