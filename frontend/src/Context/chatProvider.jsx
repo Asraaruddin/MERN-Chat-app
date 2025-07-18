@@ -2,10 +2,15 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import { useNavigate } from "react-router-dom";
 import io from "socket.io-client";
 
-const ChatContext = createContext(null);
+// ✅ Automatically select correct backend URL
+const ENDPOINT =
+  process.env.REACT_APP_BACKEND_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://talkify-5m26.onrender.com"
+    : "http://localhost:5000");
 
-// Use environment variable or fallback to localhost
-const ENDPOINT = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+const ChatContext = createContext(null);
+let socketRef = null;
 
 export const ChatProvider = ({ children }) => {
   const [selectedChat, setSelectedChat] = useState();
@@ -16,8 +21,8 @@ export const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
 
-  const socketRef = useRef(null);
   const navigate = useNavigate();
+  const reconnecting = useRef(false);
 
   useEffect(() => {
     if (!user) {
@@ -25,26 +30,28 @@ export const ChatProvider = ({ children }) => {
       return;
     }
 
-    if (!socketRef.current) {
-      socketRef.current = io(ENDPOINT, {
+    if (!socketRef) {
+      socketRef = io(ENDPOINT, {
         transports: ["websocket", "polling"],
         withCredentials: true,
       });
 
-      socketRef.current.emit("setup", user);
+      socketRef.emit("setup", user);
+      socketRef.on("connected", () => setSocketConnected(true));
 
-      socketRef.current.on("connected", () => setSocketConnected(true));
-
-      socketRef.current.on("disconnect", () => {
+      socketRef.on("disconnect", () => {
         setSocketConnected(false);
-        socketRef.current.connect(); // Auto-reconnect
+        if (!reconnecting.current) {
+          reconnecting.current = true;
+          socketRef.connect();
+        }
       });
     }
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      if (socketRef) {
+        socketRef.disconnect();
+        socketRef = null;
       }
     };
   }, [user, navigate]);
@@ -60,8 +67,9 @@ export const ChatProvider = ({ children }) => {
         setNotification,
         chats,
         setChats,
-        socket: socketRef.current,
+        socket: socketRef,
         socketConnected,
+        ENDPOINT, // expose to make API calls
       }}
     >
       {children}
